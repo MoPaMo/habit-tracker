@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Award, ArrowUp, Calendar, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,17 +7,31 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const HabitTracker = () => {
-  const [habits, setHabits] = useState(() => {
-    const savedHabits = localStorage.getItem('habits');
-    return savedHabits ? JSON.parse(savedHabits) : [];
-  });
-  
+  const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState('');
   const [frequency, setFrequency] = useState('daily');
+  const [isClient, setIsClient] = useState(false);
   
+  // Initialize client-side operations
   useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
-  }, [habits]);
+    setIsClient(true);
+    const savedHabits = window.localStorage.getItem('habits');
+    if (savedHabits) {
+      try {
+        setHabits(JSON.parse(savedHabits));
+      } catch (e) {
+        console.error('Error parsing saved habits:', e);
+        setHabits([]);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever habits change
+  useEffect(() => {
+    if (isClient) {
+      window.localStorage.setItem('habits', JSON.stringify(habits));
+    }
+  }, [habits, isClient]);
 
   const addHabit = (e) => {
     e.preventDefault();
@@ -85,6 +101,16 @@ const HabitTracker = () => {
       )
     }));
   };
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
